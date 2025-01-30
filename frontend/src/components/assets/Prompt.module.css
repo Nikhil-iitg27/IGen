@@ -1,0 +1,43 @@
+.promptContainer{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 10px;
+    width: 100%;
+    padding: 10px;
+}
+
+.promptInput{
+    width: 60%;
+    padding: 10px;
+
+    font-size: 16px;
+    color: black;
+
+    background-color: rgb(230, 230, 230);
+
+    border: 2px solid black;
+    border-radius: 5px;
+    outline: none;
+
+    transition: 0.3s ease-in-out;
+}
+
+.promptButton{
+    padding: 10px 15px;
+    font-size: 16px;
+
+    color: white;
+    background-color: black;
+
+    border: none;
+    border-radius: 5px;
+
+    cursor: pointer;
+    transition: 0.3s ease-in-out;
+}
+
+.promptButton:hover {
+    background-color: rgb(50, 50, 50);
+}
