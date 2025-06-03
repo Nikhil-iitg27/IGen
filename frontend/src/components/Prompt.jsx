@@ -13,7 +13,7 @@ function Prompt(){
         setLoading(true);
         
         try{
-            const response = await axios.post(`http://localhost:8000/api/igen/generate`, { prompt: prompt });
+            const response = await axios.post(`http://localhost:8000/api/igen/generate/`, { prompt: prompt });
 
             if (response.data.image){
                 setImage(`data:image/png;base64,${response.data.image}`);
