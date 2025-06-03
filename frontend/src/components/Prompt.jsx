@@ -7,12 +7,13 @@ function Prompt(){
     const [prompt, setPrompt] = useState("");
     const [image, setImage] = useState(null);
     const [loading, setLoading] = useState(false);
+    const backendUrl = import.meta.env.VITE_BACKEND_URL;
 
     async function generate(){
         setLoading(true);
         
         try{
-            const response = await axios.post("http://localhost:8000/api/igen/generate/", { prompt: prompt });
+            const response = await axios.post(`${backendUrl}/igen/api/generate`, { prompt: prompt });
 
             if (response.data.image){
                 setImage(`data:image/png;base64,${response.data.image}`);
