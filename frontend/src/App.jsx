@@ -1,7 +1,8 @@
 import style from './components/assets/App.module.css'
 import Prompt from './components/Prompt.jsx'
 function App() {
-  console.log('Backend URL:', import.meta.env.VITE_BACKEND_URL);
+  console.log('VITE_BACKEND_URL =', import.meta.env.VITE_BACKEND_URL);
+  console.log('import.meta.env =', import.meta.env);
   return (
     <div className={style.appContainer}>
       <div className={style.app}>
