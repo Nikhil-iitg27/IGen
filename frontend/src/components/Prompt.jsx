@@ -13,7 +13,12 @@ function Prompt(){
         setLoading(true);
         
         try{
-            const response = await axios.post(`${backendUrl}/api/igen/generate/`, { prompt: prompt });
+            console.log("Sending to backend:", { prompt });
+            const response = await axios.post(`${backendUrl}/api/igen/generate/`, { prompt: prompt }, {
+              headers: {
+                "Content-Type": "application/json"
+              }
+            });
 
             if (response.data.image){
                 setImage(`data:image/png;base64,${response.data.image}`);
