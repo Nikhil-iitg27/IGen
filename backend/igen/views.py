@@ -11,6 +11,7 @@ def generate_image(request):
     if request.method == "POST":
         try:
             data = json.loads(request.body)
+            print("Request body:", request.body)
             prompt = data.get("prompt","")
             
             if not prompt:
