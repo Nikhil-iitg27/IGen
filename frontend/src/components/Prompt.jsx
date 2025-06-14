@@ -14,10 +14,8 @@ function Prompt(){
         
         try{
             console.log("Sending to backend:", { prompt });
-            const response = await axios.post(`${backendUrl}/api/igen/generate/`, { prompt: prompt }, {
-              headers: {
-                "Content-Type": "application/json"
-              }
+            const response = await axios.post(`${backendUrl}/api/igen/generate/`, { prompt }, {
+            headers: { 'Content-Type': 'application/json' }
             });
 
             if (response.data.image){
