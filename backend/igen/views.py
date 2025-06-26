@@ -84,7 +84,7 @@ def generate_image(request):
                 "details": backend_data
             }, status=500)
 
-        logger.info("Image generated successfully.")
+        logger.info(f"Image generated successfully. ID: {backend_data["uid"]}")
         return JsonResponse(backend_data)
 
     except requests.exceptions.RequestException as req_err:
