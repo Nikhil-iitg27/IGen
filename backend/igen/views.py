@@ -87,6 +87,7 @@ def generate_image(request):
         image_id = backend_data["uid"]
         logger.info("Image generated successfully.")
         logger.info(f"Image Saved on Runpod at {image_id}")
+        return JsonResponse(backend_data)
 
     except requests.exceptions.RequestException as req_err:
         logger.exception("Network error occurred while calling inference backend.")
