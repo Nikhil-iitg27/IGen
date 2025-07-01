@@ -48,7 +48,7 @@ function Prompt() {
           headers: { "Content-Type": "application/json" },
         }
       );
-      console.log(response)
+      console.log(response);
       if (response.data.image) {
         setImage(`data:image/png;base64,${response.data.image}`);
       }
@@ -59,107 +59,43 @@ function Prompt() {
   }
 
   return (
-    <>
-      <div className={style.promptContainer}>
-        <div className={style.textGroup}>
-          <label className={style.label}>Positive Prompt :</label>
-          <input
-            className={style.promptInput}
-            type="text"
-            placeholder="Enter a prompt..."
-            onChange={(e) => setPrompt(e.target.value)}
-          />
-        </div>
-        <div className={style.textGroup}>
-          <label className={style.label}>Negative Prompt :</label>
-          <input
-            className={style.promptInput}
-            type="text"
-            placeholder="Enter negative prompt..."
-            onChange={(e) => setUnprompt(e.target.value)}
-          />
-        </div>
-        <div className={style.buttonContainer}>
-          <button
-            className={style.Button}
-            onClick={generate}
-            disabled={loading}
-          >
-            {loading ? "Generating..." : "Generate"}
-          </button>
-          <button
-            className={style.Button}
-            onClick={() => setShowAdvanced((prev) => !prev)}
-          >
-            {showAdvanced ? "Hide Advanced" : "Show Advanced"}
-          </button>
-        </div>
-      </div>
-
-      <div className={style.advancedWrapper}>
-        {showAdvanced && (
-          <div className={style.advancedContainer}>
-            <div className={style.advancedRow}>
-              <div className={style.inputGroup}>
-                <label className={style.label}>Iterations</label>
-                <input
-                  className={style.promptInput}
-                  type="number"
-                  value={steps}
-                  onChange={(e) => setSteps(Number(e.target.value))}
-                />
-              </div>
-              <div className={style.inputGroup}>
-                <label className={style.label}>Seed</label>
-                <input
-                  className={style.promptInput}
-                  type="number"
-                  value={seed}
-                  onChange={(e) => setSeed(Number(e.target.value))}
-                />
-              </div>
-            </div>
-
-            <div className={style.advancedRow}>
-              <div className={style.inputGroup}>
-                <label className={style.label}>
-                  Strength: <span>{strength}</span>
-                </label>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={strength}
-                  onChange={(e) => setStrength(Number(e.target.value))}
-                  style={{ width: "180px" }}
-                />
-              </div>
-              <div className={style.inputGroup}>
-                <label className={style.label}>
-                  Scale : <span>{scale}</span>
-                </label>
-                <div className={style.scale}>
-                  <input
-                    type="checkbox"
-                    checked={doScale}
-                    onChange={(e) => setDoScale(e.target.checked)}
-                  />
-                  <input
-                    type="range"
-                    min="1"
-                    max="14"
-                    step="0.5"
-                    value={scale}
-                    onChange={(e) => setScale(Number(e.target.value))}
-                    disabled={!doScale}
-                    style={{ width: "160px" }}
-                  />
-                </div>
-              </div>
-            </div>
+    <div className={style.mainContent}>
+      <div className={style.topRow}>
+        <div className={style.promptContainer}>
+          <div className={style.textGroup}>
+            <label className={style.label}>Positive Prompt :</label>
+            <input
+              className={style.promptInput}
+              type="text"
+              placeholder="Enter a prompt..."
+              onChange={(e) => setPrompt(e.target.value)}
+            />
           </div>
-        )}
+          <div className={style.textGroup}>
+            <label className={style.label}>Negative Prompt :</label>
+            <input
+              className={style.promptInput}
+              type="text"
+              placeholder="Enter negative prompt..."
+              onChange={(e) => setUnprompt(e.target.value)}
+            />
+          </div>
+          <div className={style.buttonContainer}>
+            <button
+              className={`${style.Button} ${loading ? style.loading : ""}`}
+              onClick={generate}
+              disabled={loading}
+            >
+              {loading ? <span className={style.spinner}></span> : "Generate"}
+            </button>
+            <button
+              className={style.Button}
+              onClick={() => setShowAdvanced((prev) => !prev)}
+            >
+              {showAdvanced ? "Hide Advanced" : "Show Advanced"}
+            </button>
+          </div>
+        </div>
 
         {image && (
           <div className={style.imageContainer}>
@@ -167,7 +103,73 @@ function Prompt() {
           </div>
         )}
       </div>
-    </>
+      <div className={style.bottomRow}>
+        {showAdvanced && (
+          <div className={style.advancedWrapper}>
+            <div className={style.advancedContainer}>
+              <div className={style.advancedRow}>
+                <div className={style.inputGroup}>
+                  <label className={style.label}>Iterations</label>
+                  <input
+                    className={style.promptInput}
+                    type="number"
+                    value={steps}
+                    onChange={(e) => setSteps(Number(e.target.value))}
+                  />
+                </div>
+                <div className={style.inputGroup}>
+                  <label className={style.label}>Seed</label>
+                  <input
+                    className={style.promptInput}
+                    type="number"
+                    value={seed}
+                    onChange={(e) => setSeed(Number(e.target.value))}
+                  />
+                </div>
+              </div>
+              <div className={style.advancedRow}>
+                <div className={style.inputGroup}>
+                  <label className={style.label}>
+                    Strength: <span>{strength}</span>
+                  </label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={strength}
+                    onChange={(e) => setStrength(Number(e.target.value))}
+                    style={{ width: "150px" }}
+                  />
+                </div>
+                <div className={style.inputGroup}>
+                  <label className={style.label}>
+                    Scale : <span>{scale}</span>
+                  </label>
+                  <div className={style.scale}>
+                    <input
+                      type="checkbox"
+                      checked={doScale}
+                      onChange={(e) => setDoScale(e.target.checked)}
+                    />
+                    <input
+                      type="range"
+                      min="1"
+                      max="14"
+                      step="0.5"
+                      value={scale}
+                      onChange={(e) => setScale(Number(e.target.value))}
+                      disabled={!doScale}
+                      style={{ width: "130px" }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 

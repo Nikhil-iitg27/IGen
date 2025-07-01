@@ -1,97 +1,187 @@
-.promptContainer {
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap");
+
+.mainContent {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
-
+  justify-content: center;
   gap: 20px;
   width: 100%;
-  padding: 10px;
+  margin-top: 48px;
+  box-sizing: border-box;
 }
 
-.textGroup {
-  width: 80%;
-  gap: 10px;
-
+.topRow {
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 24px;
+  width: 100%;
+  flex: 0 0 auto;
+}
+
+.bottomRow {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  min-width: 340px;
+  max-width: 500px;
+  flex: 0 0 auto;
+  margin-top: 0;
+}
+
+:root {
+  --bg: #121212;
+  --accent: #6c63ff;
+  --accent-hover: #857dff;
+  --input-bg: #1f1f1f;
+  --text: #fff;
+  --radius: 10px;
+  --shadow: 0 4px 24px 0 rgba(108, 99, 255, 0.1),
+    0 1.5px 6px 0 rgba(0, 0, 0, 0.1);
+}
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.promptContainer {
+  background: linear-gradient(135deg, #181824 0%, #23233a 100%);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 20px;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: stretch;
+}
+
+.textGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .label {
-  width: 150px;
-  display: inline-block;
-  margin-right: 5px;
-
-  color: black;
+  color: var(--text);
   font-size: 15px;
-  font-weight: bold;
+  font-weight: 600;
+  margin-bottom: 4px;
 }
 
 .promptInput {
-  width: 90%;
-  padding: 10px;
-  font-size: 14px;
-  color: black;
-
-  background-color: rgb(230, 230, 230);
-
-  border: 2px solid black;
-  border-radius: 5px;
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1.5px solid #23233a;
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  transition: border 0.2s, box-shadow 0.2s;
   outline: none;
+  box-shadow: none;
+}
 
-  transition: 0.3s ease-in-out;
+.promptInput:focus {
+  border: 1.5px solid var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-hover);
+}
+
+.promptInput::placeholder {
+  color: #bbb;
+  opacity: 1;
 }
 
 .buttonContainer {
   display: flex;
-  flex-direction: row;
-  justify-content: center;
-  align-items: center;
-
-  gap: 10px;
-  margin-top: 15px;
+  gap: 16px;
+  margin-top: 8px;
 }
 
 .Button {
-  padding: 10px 15px;
-  font-size: 16px;
-
-  color: white;
-  background-color: black;
-
+  background: linear-gradient(
+    90deg,
+    var(--accent) 60%,
+    var(--accent-hover) 100%
+  );
+  color: var(--text);
   border: none;
-  border-radius: 5px;
-
+  border-radius: var(--radius);
+  padding: 12px 28px;
+  font-size: 16px;
+  font-family: inherit;
+  font-weight: 600;
   cursor: pointer;
-  transition: 0.3s ease-in-out;
+  box-shadow: var(--shadow);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
 }
 
-.Button:hover {
-  background-color: rgb(50, 50, 50);
+.Button:hover,
+.Button:focus {
+  background: linear-gradient(
+    90deg,
+    var(--accent-hover) 60%,
+    var(--accent) 100%
+  );
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 6px 32px 0 rgba(108, 99, 255, 0.18);
+}
+
+.Button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.loading {
+  pointer-events: none;
+  opacity: 0.8;
+}
+
+.spinner {
+  display: inline-block;
+  width: 22px;
+  height: 22px;
+  border: 3px solid #fff;
+  border-top: 3px solid var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  vertical-align: middle;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .advancedWrapper {
   display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  gap: 30px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
   width: 100%;
-  margin-top: 20px;
-  flex-wrap: wrap;
+  margin-top: 18px;
 }
 
 .advancedContainer {
+  background: #181824;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 24px;
+  width: 420px;
+  gap: 18px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin-top: 15px;
-  padding: 10px;
-  width: 400px;
-  gap: 15px;
-  background-color: #f8f8f8;
-  border-radius: 8px;
 }
 
 .advancedRow {
@@ -114,16 +204,20 @@
   gap: 10px;
 }
 
-
 .imageContainer {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-top: 0;
 }
 
 .generatedImage {
-  width: 300px;
+  width: 340px;
+  max-width: 90vw;
   height: auto;
-  border-radius: 5px;
-  border: 1px solid #ddd;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border: 2px solid var(--accent);
+  background: #181824;
+  transition: box-shadow 0.2s;
 }
