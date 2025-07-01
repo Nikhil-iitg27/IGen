@@ -92,11 +92,10 @@ body {
 }
 
 .promptInput::placeholder {
-  width: 60%;
+
   color: #bbb;
   opacity: 1;
 }
-
 .buttonContainer {
   display: flex;
   gap: 16px;
