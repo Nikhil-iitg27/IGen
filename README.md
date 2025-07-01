@@ -41,6 +41,12 @@ IGen/
 
 ---
 
+## Frontend Image
+
+![image](https://github.com/user-attachments/assets/ea59f10e-c525-4664-8230-1275baa80da3)
+
+---
+
 ## 🔗 Component Summaries
 
 ### Frontend ([details](./frontend/README.md))
