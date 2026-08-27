@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from urllib.parse import urlparse
 from dotenv import load_dotenv
 import os
 
@@ -20,9 +21,13 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
-load_dotenv()
+# override=True: .env must always win over a stale OS-level env var left
+# behind in a long-lived terminal session (e.g. from an earlier `set`) --
+# otherwise editing .env silently does nothing for that session, no
+# matter how many times the app restarts.
+load_dotenv(override=True)
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure" + "-" + os.environ.get('SECRET_KEY', '')
+SECRET_KEY = os.environ["SECRET_KEY"]
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
@@ -30,6 +35,23 @@ DEBUG = os.environ.get('DEBUG', "False").lower() == "true"
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 # DEBUG = True
 # ALLOWED_HOSTS = []
+
+# Render terminates TLS in front of the app and forwards over plain HTTP
+# with X-Forwarded-Proto -- without this, request.is_secure() is always
+# False behind the proxy, so the secure-cookie/redirect settings below
+# would never actually engage.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+if not DEBUG:
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    # Conservative starting value (1 hour, no subdomains/preload) -- HSTS
+    # is hard to undo once a browser caches it, so start small and raise
+    # later once confirmed the site is reliably served over HTTPS.
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
 
 # Application definition
 INSTALLED_APPS = [
@@ -56,6 +78,15 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',') if os.environ.get('CORS_ALLOWED_ORIGINS') else []
 
+# django-cors-headers only allows a small default header set on
+# cross-origin requests (content-type, authorization, etc.) -- our custom
+# X-Access-Key header (Phase 3 access gating) needs to be explicitly
+# added, or browsers block it via CORS preflight before it ever reaches
+# a Django view. Extending the library's own default list rather than
+# hardcoding it, so we don't drift from whatever it actually needs.
+from corsheaders.defaults import default_headers
+CORS_ALLOW_HEADERS = list(default_headers) + ['x-access-key']
+
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
@@ -79,13 +110,32 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
+# DATABASE_URL (e.g. postgres://user:pass@host:port/dbname), when set,
+# switches to Postgres -- needed for the job queue's DB-backed state to
+# survive restarts/multiple instances in production. Local dev with no
+# DATABASE_URL set keeps using SQLite, unchanged.
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    _db_url = urlparse(DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': _db_url.path.lstrip('/'),
+            'USER': _db_url.username,
+            'PASSWORD': _db_url.password,
+            'HOST': _db_url.hostname,
+            'PORT': _db_url.port or 5432,
+        }
     }
-}
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

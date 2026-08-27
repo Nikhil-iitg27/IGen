@@ -12,6 +12,7 @@ def generate(
     prompt,
     uncond_prompt=None,
     input_image=None,
+    mask=None,
     strength=0.8,
     do_cfg=True,
     cfg_scale=7.5,
@@ -80,6 +81,11 @@ def generate(
 
         latents_shape = (1, 4, LATENTS_HEIGHT, LATENTS_WIDTH)
 
+        # Kept around (unnoised) for the mask blend below -- only set when
+        # input_image is provided, since masking has nothing to preserve
+        # pixels from otherwise.
+        original_latents = None
+
         if input_image:
             encoder = models["encoder"]
             encoder.to(device)
@@ -99,17 +105,32 @@ def generate(
             # (Batch_Size, 4, Latents_Height, Latents_Width)
             encoder_noise = torch.randn(latents_shape, generator=generator, device=device)
             # (Batch_Size, 4, Latents_Height, Latents_Width)
-            latents = encoder(input_image_tensor, encoder_noise)
+            original_latents = encoder(input_image_tensor, encoder_noise)
 
             # Add noise to the latents (the encoded input image)
             # (Batch_Size, 4, Latents_Height, Latents_Width)
             sampler.set_strength(strength=strength)
-            latents = sampler.add_noise(latents, sampler.timesteps[0])
+            latents = sampler.add_noise(original_latents, sampler.timesteps[0])
 
             to_idle(encoder)
         else:
             # (Batch_Size, 4, Latents_Height, Latents_Width)
             latents = torch.randn(latents_shape, generator=generator, device=device)
+
+        # mask: continuous 0..1 per pixel, not binary. 1 = fully regenerate
+        # this pixel, 0 = fully preserve it from input_image, anything in
+        # between blends the model's prediction with the preserved
+        # original proportionally at every step (see the blend below) --
+        # this is what gives the "noise extent" brush its effect. Only
+        # meaningful together with input_image -- silently ignored
+        # otherwise, since there's nothing to preserve pixels from.
+        mask_latent = None
+        if mask is not None and original_latents is not None:
+            mask_resized = mask.convert("L").resize((LATENTS_WIDTH, LATENTS_HEIGHT))
+            mask_array = np.array(mask_resized).astype(np.float32) / 255.0
+            mask_tensor = torch.tensor(mask_array, dtype=torch.float32, device=device)
+            mask_tensor = mask_tensor.unsqueeze(0).unsqueeze(0)  # (1, 1, Latents_Height, Latents_Width)
+            mask_latent = mask_tensor.expand(-1, 4, -1, -1)  # (1, 4, Latents_Height, Latents_Width)
 
         diffusion = models["diffusion"]
         diffusion.to(device)
@@ -136,6 +157,14 @@ def generate(
 
             # (Batch_Size, 4, Latents_Height, Latents_Width) -> (Batch_Size, 4, Latents_Height, Latents_Width)
             latents = sampler.step(timestep, latents, model_output)
+
+            if mask_latent is not None:
+                # Force the "preserve" region back to the original image,
+                # noised to this step's level, every step -- this is what
+                # keeps that region anchored through the whole trajectory
+                # instead of drifting once and then diffusing further.
+                noised_original = sampler.add_noise(original_latents, timestep)
+                latents = mask_latent * latents + (1 - mask_latent) * noised_original
 
         to_idle(diffusion)
 

@@ -1,0 +1,59 @@
+.wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  max-width: 480px;
+}
+
+.warning {
+  background: rgba(255, 92, 92, 0.12);
+  border: 1.5px solid var(--danger);
+  color: var(--text);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  font-size: 13px;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.previewBox {
+  position: relative;
+  width: 100%;
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  border: 2px solid var(--accent);
+  line-height: 0;
+}
+
+.previewImage {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.windowOverlay {
+  position: absolute;
+  box-sizing: border-box;
+  border: 2px solid var(--success);
+  background: rgba(108, 99, 255, 0.12);
+  pointer-events: none;
+}
+
+.sliderRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.sliderRow input[type="range"] {
+  flex: 1;
+}
+
+.label {
+  white-space: nowrap;
+}

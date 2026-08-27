@@ -4,8 +4,9 @@
   align-items: center;
   justify-content: center;
 
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  min-height: 100vh;
+  box-sizing: border-box;
 }
 
 .app {
@@ -28,4 +29,35 @@
 
 .tag {
   font-family: "Poppins", Arial, Helvetica, sans-serif;
+}
+
+.tabNav {
+  display: flex;
+  gap: 8px;
+  margin: 20px 0 4px;
+  background: var(--input-bg);
+  border-radius: var(--radius);
+  padding: 4px;
+}
+
+.tabButton {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 8px 20px;
+  border-radius: calc(var(--radius) - 4px);
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.tabButton:hover {
+  color: var(--text);
+}
+
+.tabActive {
+  background: var(--accent);
+  color: var(--text);
 }

@@ -1,34 +1,25 @@
-import axios from "axios";
 import React, { useState } from "react";
 import style from "./assets/Prompt.module.css";
+import useGenerationJob from "../hooks/useGenerationJob";
+import usePersistentState from "../hooks/usePersistentState";
+import { queueStatusText } from "../utils/queueStatus";
 
-function Prompt() {
-  const [prompt, setPrompt] = useState("A Futuristic Cityscape");
-  const [unprompt, setUnprompt] = useState("");
-  const [steps, setSteps] = useState(50);
-  const [seed, setSeed] = useState(43);
-  const [strength, setStrength] = useState(0.9);
-  const [doScale, setDoScale] = useState(true);
-  const [scale, setScale] = useState(8);
+function Prompt({ onSendToInpaint }) {
+  const [prompt, setPrompt] = usePersistentState("igen_generate_prompt", "A Futuristic Cityscape");
+  const [unprompt, setUnprompt] = usePersistentState("igen_generate_unprompt", "");
+  const [steps, setSteps] = usePersistentState("igen_generate_steps", 50);
+  const [seed, setSeed] = usePersistentState("igen_generate_seed", 43);
+  const [strength, setStrength] = usePersistentState("igen_generate_strength", 0.9);
+  const [doScale, setDoScale] = usePersistentState("igen_generate_do_scale", true);
+  const [scale, setScale] = usePersistentState("igen_generate_scale", 8);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [image, setImage] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL;
+  const { submit, status, image, error, queuePosition, latencyMs, isBusy } = useGenerationJob("generate");
+  const statusText = isBusy ? queueStatusText(status, queuePosition) : null;
 
   async function generate() {
-    setLoading(true);
-
     const payload = showAdvanced
-      ? {
-          prompt,
-          unprompt,
-          steps,
-          seed,
-          strength,
-          do_scale: doScale,
-          scale,
-        }
+      ? { prompt, unprompt, steps, seed, strength, do_scale: doScale, scale }
       : {
           prompt,
           unprompt: unprompt,
@@ -38,24 +29,7 @@ function Prompt() {
           do_scale: true,
           scale: 8,
         };
-
-    try {
-      console.log(payload);
-      const response = await axios.post(
-        `${backendUrl}/api/igen/generate/`,
-        payload,
-        {
-          headers: { "Content-Type": "application/json" },
-        }
-      );
-      console.log(response);
-      if (response.data.image) {
-        setImage(`data:image/png;base64,${response.data.image}`);
-      }
-    } catch (error) {
-      console.error("Error generating image:", error);
-    }
-    setLoading(false);
+    await submit(payload);
   }
 
   return (
@@ -68,6 +42,7 @@ function Prompt() {
               className={style.promptInput}
               type="text"
               placeholder="Enter a prompt..."
+              value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
             />
           </div>
@@ -77,16 +52,17 @@ function Prompt() {
               className={style.promptInput}
               type="text"
               placeholder="Enter negative prompt..."
+              value={unprompt}
               onChange={(e) => setUnprompt(e.target.value)}
             />
           </div>
           <div className={style.buttonContainer}>
             <button
-              className={`${style.Button} ${loading ? style.loading : ""}`}
+              className={`${style.Button} ${isBusy ? style.loading : ""}`}
               onClick={generate}
-              disabled={loading}
+              disabled={isBusy}
             >
-              {loading ? <span className={style.spinner}></span> : "Generate"}
+              {isBusy ? <span className={style.spinner}></span> : "Generate"}
             </button>
             <button
               className={style.Button}
@@ -95,11 +71,19 @@ function Prompt() {
               {showAdvanced ? "Hide Advanced" : "Show Advanced"}
             </button>
           </div>
+          {statusText && <p className={style.statusText}>{statusText}</p>}
+          {error && <p className={style.errorText}>{error}</p>}
         </div>
 
         {image && (
           <div className={style.imageContainer}>
             <img className={style.generatedImage} src={image} alt={prompt} />
+            <div className={style.resultMeta}>
+              {latencyMs != null && <span>{(latencyMs / 1000).toFixed(1)}s</span>}
+              <button className={style.linkButton} onClick={() => onSendToInpaint?.(image)}>
+                Send to Inpaint →
+              </button>
+            </div>
           </div>
         )}
       </div>

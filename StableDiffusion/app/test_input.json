@@ -1,0 +1,11 @@
+{
+  "input": {
+    "prompt": "A futuristic cityscape at sunset",
+    "unprompt": "",
+    "steps": 50,
+    "seed": 42,
+    "strength": 0.9,
+    "do_scale": true,
+    "scale": 8.0
+  }
+}

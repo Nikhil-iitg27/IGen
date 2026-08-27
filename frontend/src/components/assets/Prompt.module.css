@@ -31,16 +31,8 @@
   margin-top: 0;
 }
 
-:root {
-  --bg: #121212;
-  --accent: #6c63ff;
-  --accent-hover: #857dff;
-  --input-bg: #1f1f1f;
-  --text: #fff;
-  --radius: 10px;
-  --shadow: 0 4px 24px 0 rgba(108, 99, 255, 0.1),
-    0 1.5px 6px 0 rgba(0, 0, 0, 0.1);
-}
+/* Design tokens (--accent, --radius, --shadow, etc.) live in
+   src/index.css -- shared by every component, not redeclared here. */
 
 body {
   font-family: "Poppins", sans-serif;
@@ -84,6 +76,8 @@ body {
   transition: border 0.2s, box-shadow 0.2s;
   outline: none;
   box-shadow: none;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .promptInput:focus {
@@ -194,8 +188,9 @@ body {
 .inputGroup {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   flex: 1;
+  min-width: 0;
 }
 
 .scale {
@@ -206,8 +201,9 @@ body {
 
 .imageContainer {
   display: flex;
+  flex-direction: column;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: center;
   margin-top: 0;
 }
 
@@ -220,4 +216,42 @@ body {
   border: 2px solid var(--accent);
   background: #181824;
   transition: box-shadow 0.2s;
+}
+
+.errorText {
+  color: var(--danger);
+  font-size: 14px;
+  margin: 4px 0 0;
+}
+
+.statusText {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 0;
+}
+
+.resultMeta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+
+.linkButton {
+  background: none;
+  border: none;
+  color: var(--accent-hover);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.linkButton:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }

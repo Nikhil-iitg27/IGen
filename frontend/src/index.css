@@ -11,6 +11,24 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Design tokens -- shared by every component's CSS module. Declared
+     once here (not per-module) so new screens can't drift from this
+     palette. See docs for the source-of-truth rationale. */
+  --bg: #121212;
+  --panel-gradient: linear-gradient(135deg, #181824 0%, #23233a 100%);
+  --panel-bg: #181824;
+  --accent: #6c63ff;
+  --accent-hover: #857dff;
+  --input-bg: #1f1f1f;
+  --input-border: #23233a;
+  --text: #fff;
+  --text-muted: #bbb;
+  --radius: 10px;
+  --shadow: 0 4px 24px 0 rgba(108, 99, 255, 0.1),
+    0 1.5px 6px 0 rgba(0, 0, 0, 0.1);
+  --success: #4caf50;
+  --danger: #ff5c5c;
 }
 
 a {
@@ -25,9 +43,21 @@ a:hover {
 body {
   margin: 0;
   display: flex;
-  place-items: center;
+  align-items: center;
+  /* place-items' justify-items half is a no-op in flex layout (grid/block
+     only, per spec) -- justify-content is what actually centers a flex
+     item horizontally. Without this, body only ever centered vertically. */
+  justify-content: center;
   min-width: 320px;
   min-height: 100vh;
+}
+
+#root {
+  /* Gives the actual flex item (this) a definite width so descendants'
+     percentage widths (.appContainer: 100%, .app: 80%) resolve against a
+     real value instead of a circular content-based size, which is what
+     collapsed everything to the left edge. */
+  width: 100%;
 }
 
 h1 {

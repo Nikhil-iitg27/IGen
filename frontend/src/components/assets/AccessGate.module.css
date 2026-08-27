@@ -1,0 +1,68 @@
+.gateWrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 60vh;
+}
+
+.gateForm {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  background: var(--panel-gradient);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 32px 36px;
+  width: 320px;
+  max-width: 90vw;
+  box-sizing: border-box;
+}
+
+.gateTitle {
+  margin: 0 0 4px;
+  text-align: center;
+  font-size: 18px;
+}
+
+.gateInput {
+  background: var(--input-bg);
+  color: var(--text);
+  border: 1.5px solid var(--input-border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.gateInput:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-hover);
+}
+
+.gateButton {
+  background: linear-gradient(90deg, var(--accent) 60%, var(--accent-hover) 100%);
+  color: var(--text);
+  border: none;
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  font-size: 15px;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.gateButton:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.gateError {
+  color: var(--danger);
+  font-size: 13px;
+  margin: 0;
+  text-align: center;
+}

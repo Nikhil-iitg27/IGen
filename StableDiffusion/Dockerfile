@@ -24,8 +24,10 @@ RUN pip install --no-deps --ignore-installed -r requirements.txt
 COPY app/src /app/src
 COPY app/api.py /app/api.py
 
-# Expose port
+# Expose the inference port (mapped via a direct TCP port on the RunPod
+# Pod, not the HTTP Proxy -- see docs/13-pod-deployment-guide.md for why)
 EXPOSE 8000
 
-# Start Gunicorn server (single worker for now, can be scaled)
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "api:app"]
+# Single worker: one GPU, one CUDA context -- a second concurrent request
+# should queue at Gunicorn rather than two workers fighting over the GPU.
+CMD ["gunicorn", "-w", "1", "--bind", "0.0.0.0:8000", "--timeout", "300", "api:app"]
