@@ -58,6 +58,12 @@ function InpaintEditor({ initialImage }) {
   const [savedFull, setSavedFull] = useState(false);
   const savedCropRef = useRef(false);
   const savedFullRef = useRef(false);
+  // False when the source was already square and skipped the crop step
+  // (e.g. "Send to Inpaint" from a native 512x512 result) -- in that
+  // case the "cropped" and "full" saves would be byte-identical, so
+  // showing two choices is misleading. True once the user has actually
+  // confirmed a real crop window via CropSelector.
+  const [hasCropWindow, setHasCropWindow] = useState(false);
 
   // A fresh result (new job, or the old one cleared) means neither save
   // choice has been made yet.
@@ -96,6 +102,7 @@ function InpaintEditor({ initialImage }) {
         sourceRectRef.current = { x: 0, y: 0, width, height };
         setSourceImage(dataUrl);
         setPendingCrop(null);
+        setHasCropWindow(false);
       } else {
         setSourceImage(null);
         setPendingCrop({ rawImage: dataUrl, srcWidth: width, srcHeight: height, geometry });
@@ -129,6 +136,7 @@ function InpaintEditor({ initialImage }) {
     sourceRectRef.current = sourceRect;
     setSourceImage(dataUrl);
     setPendingCrop(null);
+    setHasCropWindow(true);
   }
 
   // Re-run inpainting on the result we just produced -- re-enters the
@@ -296,22 +304,37 @@ function InpaintEditor({ initialImage }) {
                   </button>
                 </div>
                 <div className={style.saveChoiceRow}>
-                  <button
-                    className={promptStyle.Button}
-                    type="button"
-                    onClick={handleSaveCrop}
-                    disabled={savedCrop}
-                  >
-                    {savedCrop ? "Saved (cropped)" : "Save cropped only"}
-                  </button>
-                  <button
-                    className={promptStyle.Button}
-                    type="button"
-                    onClick={handleSaveFull}
-                    disabled={savedFull}
-                  >
-                    {savedFull ? "Saved (full image)" : "Save full image"}
-                  </button>
+                  {hasCropWindow ? (
+                    <>
+                      <button
+                        className={promptStyle.Button}
+                        type="button"
+                        onClick={handleSaveCrop}
+                        disabled={savedCrop}
+                      >
+                        {savedCrop ? "Saved cropped" : "Save cropped"}
+                      </button>
+                      <button
+                        className={promptStyle.Button}
+                        type="button"
+                        onClick={handleSaveFull}
+                        disabled={savedFull}
+                      >
+                        {savedFull ? "Saved full" : "Save full"}
+                      </button>
+                    </>
+                  ) : (
+                    // No real crop happened -- "cropped" and "full" would
+                    // be the same image, so only offer one save action.
+                    <button
+                      className={promptStyle.Button}
+                      type="button"
+                      onClick={handleSaveCrop}
+                      disabled={savedCrop}
+                    >
+                      {savedCrop ? "Saved" : "Save image"}
+                    </button>
+                  )}
                 </div>
               </div>
             ) : (
