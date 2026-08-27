@@ -17,15 +17,23 @@ class IgenConfig(AppConfig):
     name = 'igen'
 
     def ready(self):
-        # `manage.py runserver`'s autoreloader calls django.setup() (and
-        # thus ready()) in both a parent watcher process and the real
-        # child server process (RUN_MAIN='true' identifies the child) --
-        # only start the thread once, in the child. This guard is specific
-        # to the dev-server reloader: under Gunicorn (production) or any
-        # other manage.py command, RUN_MAIN is never set at all, so it
-        # must only apply when 'runserver' is actually the command.
-        if "runserver" in sys.argv and os.environ.get("RUN_MAIN") != "true":
-            return
+        # ready() fires for every manage.py command, not just the ones
+        # that actually serve requests -- including `migrate` itself,
+        # which starting a thread during is actively wrong (it can start
+        # dispatching/purging against tables migrate hasn't created yet;
+        # this really happened on the first Render deploy: "relation
+        # igen_job does not exist" mid-migrate). Only start the thread
+        # for the real serving process: gunicorn (no manage.py in
+        # sys.argv[0] at all), or manage.py runserver specifically -- and
+        # even then only in runserver's actual child process, not the
+        # autoreloader's parent watcher (RUN_MAIN='true' identifies the
+        # child; under gunicorn or any other manage.py command RUN_MAIN
+        # is never set).
+        if "manage.py" in sys.argv[0]:
+            if "runserver" not in sys.argv:
+                return
+            if os.environ.get("RUN_MAIN") != "true":
+                return
         threading.Thread(target=self._dispatch_loop, daemon=True).start()
 
     def _dispatch_loop(self):
