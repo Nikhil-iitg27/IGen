@@ -1,81 +1,55 @@
-﻿# IGen – Full Stack Generative AI System
+# IGen – Full Stack Generative AI System
 
-This monorepo contains the complete IGen system: a modern frontend, robust backend, and a custom Stable Diffusion inference engine, all orchestrated for scalable, cloud-native deployment.
+IGen is an end-to-end Stable Diffusion image-generation system: a from-scratch latent-diffusion pipeline (not a wrapper around an existing library) running on a RunPod GPU, fronted by a Django job queue and a React SPA, deployed the way a real production service would be rather than a notebook demo. It supports both plain text-to-image generation and mask-guided inpainting, gated behind revocable access keys, with a bounded request queue and load-tested behavior under sustained traffic — details on all of that below.
+
+![Application UI](https://github.com/user-attachments/assets/ea59f10e-c525-4664-8230-1275baa80da3)
 
 ---
 
-## Architecture Overview
+## Architecture
+
+Three tiers, each independently deployed:
 
 ```
 [Frontend (React+Vite)] ⇄ [Backend (Django+Postgres, job queue)] ⇄ [Stable Diffusion Inference (Flask, RunPod GPU Pod)]
 ```
 
-- **Frontend**: React SPA (Vite), deployed on Vercel
-- **Backend**: Django app (`igen`), deployed on Render, backed by Postgres. Requests are enqueued as DB-backed jobs and dispatched asynchronously — the frontend submits and polls by job id rather than holding a request open
-- **Inference**: Custom Stable Diffusion server (Flask), deployed on a RunPod GPU pod, called over direct TCP (not RunPod's HTTP proxy, which has too short a timeout for real generation calls)
+- **Frontend**: React SPA on Vercel — Generate, Inpaint, and Metrics tabs behind a passkey gate.
+- **Backend**: Django on Render, backed by Postgres — not a synchronous proxy. Every request becomes a database-backed job; a background dispatcher thread claims and forwards jobs one at a time to the Pod, and the frontend polls for the result rather than holding a request open.
+- **Inference**: the custom SD pipeline (CLIP, VAE, UNet, DDPM sampler, all hand-implemented) served via Flask, on a RunPod GPU pod, called over a direct TCP port rather than RunPod's HTTP proxy — that proxy's ~100s timeout is too short for a real generation call.
 
----
-
-## Monorepo Structure
+That queue in the middle exists because there's exactly one GPU: a request can't just block a web worker for however long generation takes, so the backend decouples "accept the request" from "actually run it." Rejection, wait time, and throughput under that design are exactly what the [Stress Test Results](#stress-test-results) section below measures.
 
 ```
 IGen/
-├── frontend/         # React + Vite UI (Vercel)
-├── backend/          # Django API, job queue & dispatcher (Render)
-├── StableDiffusion/  # Custom SD inference server (RunPod)
-├── scripts/
-│   └── stress_test/  # Load-testing tool + results for the job queue
-└── README.md         # (this file)
+├── frontend/         # React + Vite UI (Vercel)          -- see frontend/README.md
+├── backend/          # Django job queue & dispatcher (Render) -- see backend/README.md
+├── StableDiffusion/  # from-scratch SD pipeline (RunPod)  -- see StableDiffusion/README.md
+└── scripts/
+    └── stress_test/  # load-testing tool + results referenced below
 ```
 
----
-
-## Deployment Overview
-
-| Component        | Stack              | Deployment   |
-| ---------------- | ------------------ | ------------ |
-| Frontend         | React, Vite        | Vercel       |
-| Backend          | Django, Gunicorn   | Render       |
-| Inference Engine | Flask, PyTorch, SD | RunPod (GPU) |
-
-- **Persistent Volumes**: RunPod pod mounts `/runpod-volume/weights` and `/runpod-volume/outputs` for model and output persistence.
-- **API Flow**: Frontend submits → Backend enqueues a `Job` row and returns immediately → a background dispatcher thread claims and sends it to the Pod → Frontend polls for the result.
-- **Queue protection**: a bounded queue depth (`MAX_QUEUE_DEPTH`) rejects new requests once too many are already pending/in-flight, instead of letting the backlog and wait time grow without limit. See [Stress Test Results](#-stress-test-results) below for measured behavior under load.
-- **Job outcomes** are tracked as distinct, queryable states — `COMPLETED`, `FAILED` (genuine error), `TIMEOUT` (Pod didn't respond in time), `REJECTED` (queue was full) — each with real dispatch/completion timestamps, exposed via metrics endpoints.
+Each subdirectory's README goes into that tier's actual implementation; this file covers how they fit together and what the whole system does end to end.
 
 ---
 
-## Application Frontend UI Image
+## What It Does
 
-![image](https://github.com/user-attachments/assets/ea59f10e-c525-4664-8230-1275baa80da3)
+**Generate** is straightforward text-to-image: prompt, negative prompt, step count, seed, and guidance scale.
 
----
+**Inpaint** is more involved. Since the model always works at a fixed 512×512 but uploaded photos aren't, the frontend cover-scales an upload client-side and reduces window selection to a single-axis crop (no distortion, no squishing), then lets you paint a **continuous** mask — not on/off, but a brush whose opacity controls how strongly the model regenerates each pixel versus preserving the original, on top of the usual denoising-strength control. After generation, you choose to keep the edited crop, the full image with the edit composited back in at native resolution, or both.
 
-## Component Summaries
+Both flows go through the same submit-and-poll job lifecycle: `POST /api/igen/generate/` returns a job id immediately, the frontend polls `/api/igen/status/<id>/` until the job reaches a terminal state, and every outcome is tracked as one of four distinct states — `COMPLETED`, `FAILED` (a genuine error), `TIMEOUT` (the Pod didn't respond in time), or `REJECTED` (the queue was already full, see below) — each with real dispatch/completion timestamps, not something reconstructed from client-side polling.
 
-### Frontend ([details](./frontend/README.md))
+Access is gated by revocable `AccessKey` rows (two independent scopes, `app` and `metrics`, each separately issuable/revocable), and the queue itself is bounded: once too many jobs are pending or in flight, new requests are rejected outright (`MAX_QUEUE_DEPTH`) instead of queuing indefinitely — trading a measurable rejection rate for a bounded worst-case wait time. A **Metrics** tab in the frontend (separately gated) surfaces exactly this data — job outcome counts and wait/service-time aggregates — pulled from the backend's own metrics endpoints.
 
-- React + Vite SPA with two flows: text-to-image **Generate**, and mask-guided **Inpaint**
-- Inpaint supports a continuous (non-binary) mask for a "noise-extent" brush, plus a client-side cover-scale + single-axis crop step so arbitrary-aspect uploads are windowed onto the model's fixed 512×512 input without squishing — the edited window is composited back into the full-resolution original afterward
-- Submits jobs and polls status by id (session-scoped, so multiple tabs never cross-wire which job they're tracking)
-- Gated behind a passkey (`AccessKey`) before use
-- Deployed on Vercel
+| Component | Stack | Deployment |
+| --- | --- | --- |
+| Frontend | React, Vite | Vercel |
+| Backend | Django, Postgres, Gunicorn | Render |
+| Inference | Flask, PyTorch, custom SD pipeline | RunPod (GPU pod, persistent volume for weights/outputs) |
 
-### Backend ([details](./backend/README.md))
-
-- Django app with custom `igen` module: job queue (Postgres-backed `Job` model), background dispatcher thread, metrics endpoints
-- Scoped, revocable `AccessKey` auth (`app` / `metrics` scopes), per-key cooldown, per-IP rate limiting on the key-verification endpoint
-- Bounded queue depth, distinct FAILED/TIMEOUT/REJECTED job outcomes, 3-day image-retention purge (Postgres free tier)
-- Production HTTPS/cookie hardening (SSL redirect, secure cookies, HSTS)
-- Deployed on Render with Gunicorn
-
-### Stable Diffusion Inference ([details](./StableDiffusion/README.md))
-
-- Custom, from-scratch pipeline: CLIP text encoder, VAE Encoder/Decoder, UNet (cross-attention), and a custom DDPM sampler — not a wrapper around an existing diffusion library
-- Supports text-to-image and mask-guided inpainting with configurable steps, seed, denoising strength, and guidance scale
-- Loads weights from HuggingFace ([model](https://huggingface.co/stable-diffusion-v1-5/tree/main), [tokenizer](https://huggingface.co/stable-diffusion-v1-5/tree/main/tokenizer))
-- Flask API exposes `/inference`, bearer-token gated
-- Deployed on a RunPod GPU pod with persistent storage, called directly over TCP
+For the deep dive on any of these — exact endpoints, env vars, request lifecycle, model internals — see [`frontend/README.md`](./frontend/README.md), [`backend/README.md`](./backend/README.md), and [`StableDiffusion/README.md`](./StableDiffusion/README.md).
 
 ---
 
@@ -84,74 +58,50 @@ IGen/
 - **Frontend**: React, Vite, JavaScript/JSX, Vercel
 - **Backend**: Django, Postgres, Gunicorn, Python, Render
 - **Inference**: Flask, PyTorch, custom SD pipeline, RunPod
-- **ML Models**: CLIP, VAE, UNet (from Umar Jamil’s implementation)
-- **Tokenizer/Weights**: HuggingFace
+- **ML models**: CLIP, VAE, UNet (from-scratch implementation, based on Umar Jamil's; standard pretrained SD v1.5 weights)
+- **Tokenizer/weights**: HuggingFace
 - **Load testing**: Python (`scripts/stress_test/`), matplotlib
 
 ---
 
 ## Quickstart
 
-1. **Frontend**
-   - See [frontend/README.md](./frontend/README.md)
-2. **Backend**
-   - See [backend/README.md](./backend/README.md)
-3. **Stable Diffusion**
-   - See [StableDiffusion/README.md](./StableDiffusion/README.md)
+Each tier runs independently and needs its own environment configured — see the linked README for the one you're working on:
 
----
+1. [`frontend/README.md`](./frontend/README.md) — React dev server, needs `VITE_BACKEND_URL`
+2. [`backend/README.md`](./backend/README.md) — Django, needs a `.env` with DB/Pod connection info
+3. [`StableDiffusion/README.md`](./StableDiffusion/README.md) — Flask inference server, needs model weights and an API key
 
-## API Flow Diagram
-
-```
-User
-  │
-  ▼
-[Frontend (React)]
-  │  REST
-  ▼
-[Backend (Django)]
-  │  Proxy
-  ▼
-[Stable Diffusion (Flask, RunPod)]
-```
+The backend is the one dependency the other two share: the frontend needs it running to do anything past the passkey gate, and the backend needs the inference server's URL/key to actually dispatch jobs (though it'll accept and queue requests without one — they'll just never complete).
 
 ---
 
 ## Stress Test Results
 
-Load test of the job queue (`scripts/stress_test/`): jobs submitted at Poisson-process arrivals (exponential inter-arrival times) across five arrival-rate levels, each run for a 300s window, followed by a drain wait and a pull of authoritative per-job timestamps from the backend's `/metrics/jobs/` endpoint.
+With the queue's bounded-depth design in place, the natural question is what it actually buys you under load — this is a real measurement, not a theoretical estimate. `scripts/stress_test/` submits jobs at Poisson-process arrivals (exponential inter-arrival times) across five arrival-rate levels, each run for a 300s window, then drains outstanding jobs and pulls authoritative per-job timestamps from the backend's `/metrics/jobs/` endpoint to compute wait time, service time, and blocking rate from server-side ground truth.
 
-**Test conditions / assumptions:**
+**Test conditions:**
 - GPU: single RunPod Pod, RTX 4090 (24GB)
 - Sampling steps: 30 per job (fixed, so service time is comparable across runs)
 - `MAX_QUEUE_DEPTH`: 20 (jobs beyond this are rejected, not queued)
 - `MAX_CONCURRENT_DISPATCHED`: 1 (one job in flight at a time, matching the single GPU)
-- Arrival-rate levels: mean inter-arrival 8s, 5s, 3s, 2s, 1s (i.e. ~0.13–1.0 jobs/sec)
-- Each run starts from an empty queue — at rates near the saturation point, the measured blocking probability is a run-average that blends an initial low-blocking transient with a later steady state, so it's a slight underestimate of true steady-state blocking at that rate (a longer run would converge higher)
-- Fixed prompt/params per job; real variability in service time on genuinely different prompts/resolutions isn't captured here
+- Arrival-rate levels: mean inter-arrival 8s, 5s, 3s, 2s, 1s (~0.13–1.0 jobs/sec)
+
+Two caveats worth stating plainly: each run starts from an empty queue, so the measured blocking probability near the saturation point is a run-average blending an initial low-blocking transient with a later steady state — likely a slight underestimate of true steady-state blocking at that rate. And every job used the same fixed prompt/parameters, so real variability in service time across genuinely different prompts isn't captured here.
 
 ![Stress test results](./scripts/stress_test/results/stress_test_results.png)
 
 **Findings:**
-- Service time is ~5.2s/job with very low variance — flat across every arrival rate, confirming the model's compute cost is essentially deterministic on a dedicated, uncontended GPU
-- The system stays at 0% blocking with low wait up to ~0.2 jobs/sec (mean 5s); wait time visibly degrades before any request is ever rejected
-- Once saturated, p95 wait time plateaus at ~100–108s — matches the theoretical worst case of `(MAX_QUEUE_DEPTH − 1) × service_time ≈ 99s`, confirming the queue cap bounds wait time by converting excess load into a measurable rejection rate instead of unbounded queueing
-- 100% completion rate, zero failures, zero timeouts across all 262 completed jobs spanning every load level tested
-
----
-
-## Logging & Debugging
-
-- Frontend: Browser console, UI error messages
-- Backend: Django logs, Render dashboard, `/api/igen/metrics/summary/` and `/api/igen/metrics/jobs/` (metrics-scoped) for job outcome/latency data
-- Inference: Pod logs (stdout), output images in persistent volume
+- Service time is ~5.2s/job with very low variance across every arrival rate — the model's compute cost is essentially deterministic on a dedicated, uncontended GPU.
+- The system holds 0% blocking with low wait up to ~0.2 jobs/sec (mean 5s); wait time visibly degrades before any request is ever rejected — blocking lags behind the real onset of saturation.
+- Once saturated, p95 wait time plateaus at ~100–108s, matching the theoretical worst case of `(MAX_QUEUE_DEPTH − 1) × service_time ≈ 99s` almost exactly — direct confirmation that the queue cap bounds wait time by converting excess load into a measurable rejection rate instead of unbounded queueing.
+- 100% completion rate, zero failures, zero timeouts across all 262 completed jobs spanning every load level tested — no dispatcher races or Pod instability observed even under sustained queue saturation.
 
 ---
 
 ## Acknowledgements
 
-- [Umar Jamil](https://github.com/cloneofsimo) for Stable Diffusion implementation
+- [Umar Jamil](https://github.com/hkproj) for the Stable Diffusion implementation this pipeline is based on
 - [HuggingFace](https://huggingface.co/stable-diffusion-v1-5) for model weights/tokenizer
 - [OpenAI CLIP](https://github.com/openai/CLIP)
 - [RunPod](https://www.runpod.io/), [Vercel](https://vercel.com/), [Render](https://render.com/)
