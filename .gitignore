@@ -2,4 +2,4 @@ docs/
 *.sqlite3
 .env
 *.env
-scripts/stress_test/results/
+scripts/stress_test/results/*.json

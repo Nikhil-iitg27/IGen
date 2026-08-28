@@ -1,0 +1,6 @@
+mean_interarrival_seconds,jobs_offered,jobs_admitted,jobs_rejected,submit_errors,blocking_probability,completion_rate,timeout_rate,failed_rate,avg_wait_seconds,p95_wait_seconds,avg_service_seconds,p95_service_seconds,avg_total_latency_seconds,p95_total_latency_seconds
+8,35,35,0,1,0.0,1.0,0.0,0.0,7.826,17.283,5.344,5.473,13.17,22.594
+5,50,50,0,0,0.0,1.0,0.0,0.0,13.07,27.891,5.252,5.356,18.322,33.128
+3,79,76,3,0,0.038,1.0,0.0,0.0,52.543,93.56,5.172,5.259,57.715,98.763
+2,146,75,71,0,0.4863,1.0,0.0,0.0,81.011,102.58,5.221,5.391,86.232,107.786
+1,298,76,222,0,0.745,1.0,0.0,0.0,84.048,100.634,5.137,5.242,89.185,105.801
