@@ -1,10 +1,10 @@
-# IGen – Full Stack Generative AI System
+﻿# IGen – Full Stack Generative AI System
 
 This monorepo contains the complete IGen system: a modern frontend, robust backend, and a custom Stable Diffusion inference engine, all orchestrated for scalable, cloud-native deployment.
 
 ---
 
-## 🗺️ Architecture Overview
+## Architecture Overview
 
 ```
 [Frontend (React+Vite)] ⇄ [Backend (Django+Postgres, job queue)] ⇄ [Stable Diffusion Inference (Flask, RunPod GPU Pod)]
@@ -16,7 +16,7 @@ This monorepo contains the complete IGen system: a modern frontend, robust backe
 
 ---
 
-## 📦 Monorepo Structure
+## Monorepo Structure
 
 ```
 IGen/
@@ -30,7 +30,7 @@ IGen/
 
 ---
 
-## 🚀 Deployment Overview
+## Deployment Overview
 
 | Component        | Stack              | Deployment   |
 | ---------------- | ------------------ | ------------ |
@@ -51,7 +51,7 @@ IGen/
 
 ---
 
-## 🔗 Component Summaries
+## Component Summaries
 
 ### Frontend ([details](./frontend/README.md))
 
@@ -79,7 +79,7 @@ IGen/
 
 ---
 
-## 🧠 Tech Stack
+## Tech Stack
 
 - **Frontend**: React, Vite, JavaScript/JSX, Vercel
 - **Backend**: Django, Postgres, Gunicorn, Python, Render
@@ -90,7 +90,7 @@ IGen/
 
 ---
 
-## 🛠️ Quickstart
+## Quickstart
 
 1. **Frontend**
    - See [frontend/README.md](./frontend/README.md)
@@ -101,7 +101,7 @@ IGen/
 
 ---
 
-## 📡 API Flow Diagram
+## API Flow Diagram
 
 ```
 User
@@ -118,7 +118,7 @@ User
 
 ---
 
-## 📊 Stress Test Results
+## Stress Test Results
 
 Load test of the job queue (`scripts/stress_test/`): jobs submitted at Poisson-process arrivals (exponential inter-arrival times) across five arrival-rate levels, each run for a 300s window, followed by a drain wait and a pull of authoritative per-job timestamps from the backend's `/metrics/jobs/` endpoint.
 
@@ -141,7 +141,7 @@ Load test of the job queue (`scripts/stress_test/`): jobs submitted at Poisson-p
 
 ---
 
-## 📝 Logging & Debugging
+## Logging & Debugging
 
 - Frontend: Browser console, UI error messages
 - Backend: Django logs, Render dashboard, `/api/igen/metrics/summary/` and `/api/igen/metrics/jobs/` (metrics-scoped) for job outcome/latency data
@@ -149,7 +149,7 @@ Load test of the job queue (`scripts/stress_test/`): jobs submitted at Poisson-p
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [Umar Jamil](https://github.com/cloneofsimo) for Stable Diffusion implementation
 - [HuggingFace](https://huggingface.co/stable-diffusion-v1-5) for model weights/tokenizer
@@ -158,6 +158,6 @@ Load test of the job queue (`scripts/stress_test/`): jobs submitted at Poisson-p
 
 ---
 
-## 📄 License
+## License
 
 This project is for research and educational purposes. See the root `LICENSE` file for details.

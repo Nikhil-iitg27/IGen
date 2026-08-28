@@ -1,10 +1,10 @@
-# Stable Diffusion Inference Server
+﻿# Stable Diffusion Inference Server
 
 This directory contains a custom Stable Diffusion inference engine, built from scratch and deployed on [RunPod](https://www.runpod.io/). It exposes a Flask API for text-to-image generation using a pipeline of CLIP, VAE (Encoder/Decoder), and UNet models.
 
 ---
 
-## 🏗️ Directory Structure
+## Directory Structure
 
 ```
 StableDiffusion/
@@ -34,7 +34,7 @@ StableDiffusion/
 
 ---
 
-## 🧠 Model Architecture
+## Model Architecture
 
 - **CLIP**: Used for prompt tokenization and text embedding ([OpenAI CLIP](https://github.com/openai/CLIP)).
 - **VAE Encoder/Decoder**: Compresses and reconstructs images in latent space.
@@ -45,7 +45,7 @@ All components are loaded from scratch using distilled weights and HuggingFace t
 
 ---
 
-## 📦 Weights & Tokenizer
+## Weights & Tokenizer
 
 - **Model Weights**: [v1-5-pruned-emaonly.ckpt](https://huggingface.co/stable-diffusion-v1-5/tree/main)
 - **Tokenizer Files**: [merges.txt](https://huggingface.co/stable-diffusion-v1-5/tree/main/tokenizer), [vocab.json](https://huggingface.co/stable-diffusion-v1-5/tree/main/tokenizer)
@@ -53,7 +53,7 @@ All components are loaded from scratch using distilled weights and HuggingFace t
 
 ---
 
-## 🚀 Deployment: RunPod Pod
+## Deployment: RunPod Pod
 
 - **Persistent Volume**: Model weights and tokenizer files are mounted at `/runpod-volume/weights` and outputs at `/runpod-volume/outputs`.
 - **API Exposure**: Flask app runs on port `8000` and exposes `/inference` endpoint.
@@ -62,7 +62,7 @@ All components are loaded from scratch using distilled weights and HuggingFace t
 
 ---
 
-## 🖥️ Running the API
+## Running the API
 
 ### 1. With Flask (for development)
 
@@ -94,7 +94,7 @@ python main.py
 
 ---
 
-## 🔗 API Usage Example
+## API Usage Example
 
 **POST** `/inference`
 
@@ -122,7 +122,7 @@ Response:
 
 ---
 
-## 📝 Logging & Debugging
+## Logging & Debugging
 
 - All requests and errors are logged to stdout (visible in RunPod pod logs).
 - Output images are saved in `/runpod-volume/outputs` for persistence.
@@ -130,7 +130,7 @@ Response:
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [Umar Jamil](https://github.com/cloneofsimo) for the distilled Stable Diffusion implementation
 - [HuggingFace](https://huggingface.co/stable-diffusion-v1-5) for model weights and tokenizer files
@@ -139,6 +139,6 @@ Response:
 
 ---
 
-## 📄 License
+## License
 
 This project is for research and educational purposes. See the root `LICENSE` file for details.

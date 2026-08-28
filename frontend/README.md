@@ -1,10 +1,10 @@
-# Frontend – React + Vite
+﻿# Frontend – React + Vite
 
 This is the frontend for the IGen system, built with [React](https://react.dev/) and [Vite](https://vitejs.dev/). It provides a modern, responsive UI for users to interact with the generative AI backend and Stable Diffusion inference engine.
 
 ---
 
-## 🚀 Features
+## Features
 
 - Fast, modular React SPA
 - Connects to Django backend for prompt submission and image retrieval
@@ -13,7 +13,7 @@ This is the frontend for the IGen system, built with [React](https://react.dev/)
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 frontend/
@@ -35,7 +35,7 @@ frontend/
 
 ---
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### 1. Prerequisites
 
@@ -62,7 +62,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173) by d
 
 ---
 
-## 🌐 Deployment (Vercel)
+## Deployment (Vercel)
 
 1. Push your code to a GitHub/GitLab/Bitbucket repo.
 2. Connect the repo to [Vercel](https://vercel.com/import).
@@ -71,7 +71,7 @@ The app will be available at [http://localhost:5173](http://localhost:5173) by d
 
 ---
 
-## 🔗 API Integration
+## API Integration
 
 The frontend communicates with the Django backend via REST API calls.
 
@@ -95,14 +95,14 @@ fetch('https://<your-backend-domain>/api/generate/', {
 
 ---
 
-## 🧪 Testing
+## Testing
 
 - Lint: `npm run lint`
 - (Add your preferred testing framework, e.g., Jest, React Testing Library)
 
 ---
 
-## 📝 Logging & Debugging
+## Logging & Debugging
 
 - Client-side errors are logged in the browser console.
 - API errors are surfaced in the UI and can be debugged via browser dev tools.
@@ -110,7 +110,7 @@ fetch('https://<your-backend-domain>/api/generate/', {
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [React](https://react.dev/)
 - [Vite](https://vitejs.dev/)
@@ -118,6 +118,6 @@ fetch('https://<your-backend-domain>/api/generate/', {
 
 ---
 
-## 📄 License
+## License
 
 This project is for research and educational purposes. See the root `LICENSE` file for details.

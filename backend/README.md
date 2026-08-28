@@ -1,10 +1,10 @@
-# Backend – Django + Gunicorn
+﻿# Backend – Django + Gunicorn
 
 This is the backend for the IGen system, built with [Django](https://www.djangoproject.com/) and a custom app called `igen`. It handles API routing, request logging, and proxies inference calls to the Stable Diffusion inference server. The backend is designed for deployment with Gunicorn and Render.
 
 ---
 
-## 🏗️ Project Structure
+## Project Structure
 
 ```
 backend/
@@ -29,7 +29,7 @@ backend/
 
 ---
 
-## ⚙️ Features
+## Features
 
 - Django REST API with custom `igen` app
 - Proxies prompt/image requests to ML backend (Stable Diffusion server)
@@ -38,7 +38,7 @@ backend/
 
 ---
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### 1. Prerequisites
 - Python 3.10+
@@ -64,7 +64,7 @@ python manage.py runserver
 
 ---
 
-## 🚀 Deployment (Render + Gunicorn)
+## Deployment (Render + Gunicorn)
 
 - Use [Gunicorn](https://gunicorn.org/) as the WSGI server:
   ```bash
@@ -75,7 +75,7 @@ python manage.py runserver
 
 ---
 
-## 🔗 API Routing & Proxy
+## API Routing & Proxy
 
 - All prompt/image requests are routed through Django and proxied to the Stable Diffusion inference server (e.g., on RunPod).
 - Example endpoint: `/api/generate/`
@@ -100,7 +100,7 @@ curl -X POST https://<your-backend-domain>/api/generate/ \
 
 ---
 
-## 📝 Logging & Debugging
+## Logging & Debugging
 
 - All API requests and responses are logged by the `igen` app (see `models.py` and `views.py`).
 - Logs can be viewed in the Render dashboard or server logs.
@@ -108,7 +108,7 @@ curl -X POST https://<your-backend-domain>/api/generate/ \
 
 ---
 
-## 🙏 Acknowledgements
+## Acknowledgements
 
 - [Django](https://www.djangoproject.com/)
 - [Gunicorn](https://gunicorn.org/)
@@ -116,6 +116,6 @@ curl -X POST https://<your-backend-domain>/api/generate/ \
 
 ---
 
-## 📄 License
+## License
 
 This project is for research and educational purposes. See the root `LICENSE` file for details.
