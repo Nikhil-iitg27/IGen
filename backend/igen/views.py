@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 
 from django.core.paginator import Paginator
 from django.http import JsonResponse
@@ -19,6 +20,7 @@ logging.basicConfig(level=logging.DEBUG, format='[%(asctime)s] %(levelname)s: %(
 
 VERIFY_KEY_MAX_ATTEMPTS = 10
 VERIFY_KEY_WINDOW_SECONDS = 60
+MAX_QUEUE_DEPTH = int(os.environ.get("MAX_QUEUE_DEPTH", "20"))
 
 
 def _queue_position(job: Job) -> int:
@@ -83,6 +85,12 @@ def generate_image(request):
             payload["image"] = data["image"]
         if data.get("mask"):
             payload["mask"] = data["mask"]
+
+        in_queue = Job.objects.filter(
+            status__in=[Job.Status.PENDING, Job.Status.IN_PROGRESS]
+        ).count()
+        if in_queue >= MAX_QUEUE_DEPTH:
+            return JsonResponse({"error": "Queue is full. Please try again shortly."}, status=429)
 
         # Always PENDING, dispatched by the background thread
         # (igen/apps.py) -- never inline here. A Pod's /inference call
