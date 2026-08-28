@@ -10,7 +10,9 @@ class Job(models.Model):
         IN_QUEUE = "IN_QUEUE"      # sent to RunPod, RunPod says queued
         IN_PROGRESS = "IN_PROGRESS"
         COMPLETED = "COMPLETED"
-        FAILED = "FAILED"
+        FAILED = "FAILED"          # genuine error (bad response, connection error, etc.)
+        TIMEOUT = "TIMEOUT"        # Pod didn't respond within DISPATCH_TIMEOUT_SECONDS
+        REJECTED = "REJECTED"      # never queued -- MAX_QUEUE_DEPTH was already reached
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)

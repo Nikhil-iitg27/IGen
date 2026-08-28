@@ -59,7 +59,7 @@ export default function useGenerationJob(source, { autoSave = true } = {}) {
         setImage(dataUrl);
         if (autoSave) saveImage(dataUrl, { source });
       }
-      if (finalStatus === "FAILED") {
+      if (finalStatus === "FAILED" || finalStatus === "TIMEOUT") {
         setError(data.error || "Generation failed.");
       }
     },
@@ -74,7 +74,7 @@ export default function useGenerationJob(source, { autoSave = true } = {}) {
           const response = await appClient.get(`/api/igen/status/${jobId}/`);
           const data = response.data;
           setQueuePosition(data.queue_position ?? null);
-          if (data.status === "COMPLETED" || data.status === "FAILED") {
+          if (data.status === "COMPLETED" || data.status === "FAILED" || data.status === "TIMEOUT") {
             finish(data.status, data);
           } else {
             setStatus(data.status);
@@ -133,7 +133,7 @@ export default function useGenerationJob(source, { autoSave = true } = {}) {
     [pollJobStatus]
   );
 
-  const isBusy = status !== null && status !== "COMPLETED" && status !== "FAILED";
+  const isBusy = status !== null && status !== "COMPLETED" && status !== "FAILED" && status !== "TIMEOUT";
 
   // Clears the current result (e.g. after re-importing it as a new
   // source image) without touching any in-flight job -- there isn't one

@@ -66,6 +66,10 @@ def dispatch_job(job: Job) -> Job:
             job.status = Job.Status.COMPLETED
             job.image = response_data.get("image")
 
+    except requests.exceptions.Timeout:
+        logger.exception(f"Pod did not respond within {DISPATCH_TIMEOUT_SECONDS}s for job {job.id}.")
+        job.status = Job.Status.TIMEOUT
+        job.error = "The inference server took too long to respond. Please try again shortly."
     except requests.exceptions.RequestException:
         # The raw exception text can contain the Pod's internal IP/port
         # (and on Windows, a raw object repr) -- fine for our own logs,

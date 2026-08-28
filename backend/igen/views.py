@@ -90,7 +90,15 @@ def generate_image(request):
             status__in=[Job.Status.PENDING, Job.Status.IN_PROGRESS]
         ).count()
         if in_queue >= MAX_QUEUE_DEPTH:
-            return JsonResponse({"error": "Queue is full. Please try again shortly."}, status=429)
+            # Recorded as a real row (not just a log line) so rejections
+            # are permanent, queryable ground truth via metrics_jobs --
+            # REJECTED is excluded from the in_queue count above, so this
+            # can never itself push the queue over the cap.
+            rejected = Job.objects.create(status=Job.Status.REJECTED, payload=payload)
+            return JsonResponse({
+                "error": "Queue is full. Please try again shortly.",
+                "job_id": str(rejected.id),
+            }, status=429)
 
         # Always PENDING, dispatched by the background thread
         # (igen/apps.py) -- never inline here. A Pod's /inference call
@@ -175,7 +183,7 @@ def _job_response(job: Job) -> JsonResponse:
     result = {"status": job.status, "queue_position": _queue_position(job)}
     if job.status == Job.Status.COMPLETED:
         result["image"] = job.image
-    elif job.status == Job.Status.FAILED:
+    elif job.status in (Job.Status.FAILED, Job.Status.TIMEOUT):
         result["error"] = job.error
     return JsonResponse(result)
 
@@ -194,13 +202,15 @@ def metrics_summary(request):
     jobs = Job.objects.all()
     completed = jobs.filter(status=Job.Status.COMPLETED)
 
-    total_latencies, queue_waits, delay_times, exec_times = [], [], [], []
+    total_latencies, queue_waits, service_times, delay_times, exec_times = [], [], [], [], []
     for job in completed.only(
         "created_at", "dispatched_at", "completed_at",
         "runpod_delay_time_ms", "runpod_execution_time_ms",
     ):
         if job.completed_at:
             total_latencies.append((job.completed_at - job.created_at).total_seconds())
+            if job.dispatched_at:
+                service_times.append((job.completed_at - job.dispatched_at).total_seconds())
         if job.dispatched_at:
             queue_waits.append((job.dispatched_at - job.created_at).total_seconds())
         if job.runpod_delay_time_ms is not None:
@@ -212,9 +222,12 @@ def metrics_summary(request):
         "total_jobs": jobs.count(),
         "completed": completed.count(),
         "failed": jobs.filter(status=Job.Status.FAILED).count(),
+        "timeout": jobs.filter(status=Job.Status.TIMEOUT).count(),
+        "rejected": jobs.filter(status=Job.Status.REJECTED).count(),
         "pending_now": jobs.filter(status=Job.Status.PENDING).count(),
         "avg_total_latency_seconds": _avg(total_latencies),
         "avg_queue_wait_seconds": _avg(queue_waits),
+        "avg_service_time_seconds": _avg(service_times),
         "avg_runpod_delay_time_ms": _avg(delay_times),
         "avg_runpod_execution_time_ms": _avg(exec_times),
     })
